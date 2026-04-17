@@ -75,7 +75,7 @@ jobs:
             arch: msvc2022_64
             compiler: x64
             vsversion: 2022
-            preset: Windows-OpenGL-sccache
+            preset: Windows-OpenGL-Debug
             renderer: OpenGL
             build_type: Debug
           - qt_version: 6.8.3
@@ -84,7 +84,7 @@ jobs:
             arch: msvc2022_64
             compiler: x64
             vsversion: 2022
-            preset: Windows-OpenGL-sccache
+            preset: Windows-OpenGL-Release
             renderer: OpenGL
             build_type: Release
           #- qt_version: 6.8.3
