@@ -177,9 +177,9 @@ jobs:
         shell: bash
         working-directory: source
         run: |
-          cmake --workflow --preset ${PRESET} \
-            -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
-            -DCMAKE_DEBUG_INFORMATION_FORMAT=pdb
+          cmake --preset ${PRESET} -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCMAKE_DEBUG_INFORMATION_FORMAT=pdb
+          cmake --build --preset ${PRESET}
+          cmake --install --preset ${PRESET}
 
       - name: Install
         shell: bash
@@ -193,21 +193,27 @@ jobs:
         working-directory: source/examples/quick
         run: |
           export QMapLibre_DIR="$GITHUB_WORKSPACE/install/maplibre-native-qt"
-          cmake --workflow --preset default -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
+          cmake --preset ${PRESET} -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCMAKE_DEBUG_INFORMATION_FORMAT=pdb
+          cmake --build --preset ${PRESET}
+          cmake --install --preset ${PRESET}
 
       - name: Build QtQuick Standalone Example
         shell: bash
         working-directory: source/examples/quick-standalone
         run: |
           export QMapLibre_DIR="$GITHUB_WORKSPACE/install/maplibre-native-qt"
-          cmake --workflow --preset default -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
+          cmake --preset ${PRESET} -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCMAKE_DEBUG_INFORMATION_FORMAT=pdb
+          cmake --build --preset ${PRESET}
+          cmake --install --preset ${PRESET}
 
       - name: Build QtWidgets Example
         shell: bash
         working-directory: source/examples/widgets
         run: |
           export QMapLibre_DIR="$GITHUB_WORKSPACE/install/maplibre-native-qt"
-          cmake --workflow --preset default -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
+          cmake --preset ${PRESET} -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCMAKE_DEBUG_INFORMATION_FORMAT=pdb
+          cmake --build --preset ${PRESET}
+          cmake --install --preset ${PRESET}
 
       - name: Show sccache stats
         run: sccache --show-stats
