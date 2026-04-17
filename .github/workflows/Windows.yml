@@ -64,30 +64,42 @@ permissions:
 
 jobs:
   build-and-test:
-    name: Build (Qt${{ matrix.qt_version }}, ${{ matrix.renderer }}, ${{ matrix.arch }})
+    name: Build (Qt${{ matrix.qt_version }}, ${{ matrix.renderer }}, ${{ matrix.arch }}, ${{ matrix.build_type }})
     runs-on: ${{ matrix.runner }}
     strategy:
       matrix:
         include:
           - qt_version: 6.8.3
             qt_arch: win64_msvc2022_64
-            runner: windows-2025
+            runner: windows-2022
             arch: msvc2022_64
             compiler: x64
             vsversion: 2022
             preset: Windows-OpenGL-sccache
             renderer: OpenGL
+            build_type: Release
           - qt_version: 6.8.3
             qt_arch: win64_msvc2022_64
-            runner: windows-2025
+            runner: windows-2022
             arch: msvc2022_64
             compiler: x64
             vsversion: 2022
-            preset: Windows-Vulkan-sccache
-            renderer: Vulkan
+            preset: Windows-OpenGL-sccache
+            renderer: OpenGL
+            build_type: Debug
+          #- qt_version: 6.8.3
+          #  qt_arch: win64_msvc2022_64
+          #  runner: windows-2022
+          #  arch: msvc2022_64
+          #  compiler: x64
+          #  vsversion: 2022
+          #  preset: Windows-OpenGL-sccache
+          #  renderer: OpenGL
+          #  build_type: Debug
 
     env:
       PRESET: ${{ matrix.preset }}
+      BUILD_TYPE: ${{ matrix.build_type }}
 
     steps:
       - name: Configure AWS Credentials
@@ -165,7 +177,9 @@ jobs:
         shell: bash
         working-directory: source
         run: |
-          cmake --workflow --preset ${PRESET}
+          cmake --workflow --preset ${PRESET} \
+            -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
+            -DCMAKE_DEBUG_INFORMATION_FORMAT=pdb
 
       - name: Install
         shell: bash
@@ -179,21 +193,21 @@ jobs:
         working-directory: source/examples/quick
         run: |
           export QMapLibre_DIR="$GITHUB_WORKSPACE/install/maplibre-native-qt"
-          cmake --workflow --preset default
+          cmake --workflow --preset default -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
 
       - name: Build QtQuick Standalone Example
         shell: bash
         working-directory: source/examples/quick-standalone
         run: |
           export QMapLibre_DIR="$GITHUB_WORKSPACE/install/maplibre-native-qt"
-          cmake --workflow --preset default
+          cmake --workflow --preset default -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
 
       - name: Build QtWidgets Example
         shell: bash
         working-directory: source/examples/widgets
         run: |
           export QMapLibre_DIR="$GITHUB_WORKSPACE/install/maplibre-native-qt"
-          cmake --workflow --preset default
+          cmake --workflow --preset default -DCMAKE_BUILD_TYPE=${BUILD_TYPE}
 
       - name: Show sccache stats
         run: sccache --show-stats
@@ -201,13 +215,13 @@ jobs:
       - name: Upload installation
         uses: actions/upload-artifact@v7
         with:
-          name: Windows_${{ matrix.arch }}_${{ matrix.qt_version }}_${{ matrix.renderer }}
+          name: Windows_${{ matrix.arch }}_${{ matrix.qt_version }}_${{ matrix.renderer }}_${{ matrix.build_type }}
           path: build/qt6-Windows-${{ matrix.renderer }}/maplibre-native-qt_*.tar.bz2
 
       - name: Upload examples
         uses: actions/upload-artifact@v7
         with:
-          name: Windows_${{ matrix.arch }}_${{ matrix.qt_version }}_${{ matrix.renderer }}_examples
+          name: Windows_${{ matrix.arch }}_${{ matrix.qt_version }}_${{ matrix.renderer }}_${{ matrix.build_type }}_examples
           path: build/qt6-example-*/*.tar.bz2
 
   release:
@@ -221,7 +235,8 @@ jobs:
       matrix:
         qt_version: [6.8.3]
         arch: [msvc2022_64, msvc2022_arm64]
-        renderer: [OpenGL, Vulkan]
+        renderer: [OpenGL]
+        build_type: [Release, Debug]
 
     steps:
       - name: Download artifacts
