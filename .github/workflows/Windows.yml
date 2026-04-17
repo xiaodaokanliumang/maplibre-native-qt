@@ -150,7 +150,7 @@ jobs:
           git submodule update --init --recursive --depth 1 --force
 
       - name: Download Qt
-        uses: jurplel/install-qt-action@v6
+        uses: jurplel/install-qt-action@v4
         with:
           aqtversion: ==3.3.*
           aqtsource: git+https://github.com/miurahr/aqtinstall.git
