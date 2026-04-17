@@ -152,7 +152,7 @@ jobs:
         run: |
           mkdir -p install/${{ matrix.build_type }}
           cd install/${{ matrix.build_type }}
-          tar xf "$GITHUB_WORKSPACE/build/qt6-${{ matrix.preset }}/maplibre-native-qt_"*.tar.bz2
+          tar xf "$GITHUB_WORKSPACE/build/qt6-${{ matrix.preset }}/maplibre-native-qt_"*.tar.bz2          
           mv maplibre-native-qt_* maplibre-native-qt
 
       # 🔥 修复 4：示例用正确的默认配置，不使用主项目 PRESET
@@ -185,7 +185,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: Windows_${{ matrix.arch }}_${{ matrix.qt_version }}_${{ matrix.renderer }}_${{ matrix.build_type }}
-          path: build/qt6-Windows-${{ matrix.renderer }}/maplibre-native-qt_*.tar.bz2
+          path: ${{ github.workspace }}/build/qt6-${{ matrix.preset }}/maplibre-native-qt_*.tar.bz2
 
   release:
     name: Release
