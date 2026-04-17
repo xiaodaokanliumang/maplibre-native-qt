@@ -139,7 +139,9 @@ jobs:
         run: |
           cmake --preset ${PRESET} \
             -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
-            -DCMAKE_CONFIGURATION_TYPES=${BUILD_TYPE}
+            -DCMAKE_CONFIGURATION_TYPES=${BUILD_TYPE} \
+            -DCMAKE_CXX_COMPILER_LAUNCHER= \
+            -DCMAKE_C_COMPILER_LAUNCHER=
           
           cmake --build --preset ${PRESET} --config ${BUILD_TYPE}
           
