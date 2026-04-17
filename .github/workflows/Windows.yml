@@ -77,16 +77,16 @@ jobs:
             vsversion: 2022
             preset: Windows-OpenGL-sccache
             renderer: OpenGL
-            build_type: Release
-          - qt_version: 6.8.3
-            qt_arch: win64_msvc2022_64
-            runner: windows-2022
-            arch: msvc2022_64
-            compiler: x64
-            vsversion: 2022
-            preset: Windows-OpenGL-sccache
-            renderer: OpenGL
             build_type: Debug
+          #- qt_version: 6.8.3
+          #  qt_arch: win64_msvc2022_64
+          #  runner: windows-2022
+          #  arch: msvc2022_64
+          #  compiler: x64
+          #  vsversion: 2022
+          #  preset: Windows-OpenGL-sccache
+          #  renderer: OpenGL
+          #  build_type: Release
           #- qt_version: 6.8.3
           #  qt_arch: win64_msvc2022_64
           #  runner: windows-2022
