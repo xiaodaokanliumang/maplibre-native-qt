@@ -177,9 +177,9 @@ jobs:
         shell: bash
         working-directory: source
         run: |
-          cmake --preset ${PRESET} -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCMAKE_DEBUG_INFORMATION_FORMAT=pdb
-          cmake --build --preset ${PRESET}
-          cmake --install --preset ${PRESET}
+          cmake --preset ${PRESET} -DCMAKE_CONFIGURATION_TYPES="${BUILD_TYPE}" -DCMAKE_DEBUG_INFORMATION_FORMAT=pdb
+          cmake --build --preset ${PRESET} --config ${BUILD_TYPE}
+          cmake --install --preset ${PRESET} --config ${BUILD_TYPE}
 
       - name: Install
         shell: bash
