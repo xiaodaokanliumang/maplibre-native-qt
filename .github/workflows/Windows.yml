@@ -144,7 +144,7 @@ jobs:
             -DCMAKE_C_COMPILER_LAUNCHER=
           
           cmake --build --preset ${PRESET} --config ${BUILD_TYPE}     
-          cmake --install "build/qt6-Windows-${{ matrix.renderer }}" --config ${BUILD_TYPE}
+          cmake --install "../build/qt6-Windows-${{ matrix.renderer }}" --config ${BUILD_TYPE}
 
       # 🔥 修复 3：正确安装到独立目录
       - name: Prepare Install Directory
