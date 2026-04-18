@@ -122,9 +122,8 @@ jobs:
         shell: bash
         working-directory: source
         run: |
-          cmake --workflow --preset ${PRESET} \
-            -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
-            -DCMAKE_CONFIGURATION_TYPES=${BUILD_TYPE}
+          cmake --preset ${PRESET} -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+          cmake --workflow --preset ${PRESET}
 
       # 🔥 安装：完全保持你原来的写法！只加了版本后缀
       - name: Install
