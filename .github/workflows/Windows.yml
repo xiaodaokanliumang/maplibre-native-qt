@@ -9,8 +9,6 @@ on:
       - ".gitignore"
       - "README.md"
       - "docs/**"
-      - ".github/workflows/*.yml"
-      - "cmake/presets/*.json"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -45,9 +43,10 @@ jobs:
             renderer: OpenGL
             build_type: Release
 
+    # 🔥 🔥 🔥 关键：这里注入编译类型，让 workflow 自动读取！只编译一次！
     env:
       PRESET: ${{ matrix.preset }}
-      BUILD_TYPE: ${{ matrix.build_type }}
+      CMAKE_BUILD_TYPE: ${{ matrix.build_type }}
 
     steps:
       - name: Configure AWS Credentials
@@ -68,14 +67,8 @@ jobs:
         shell: bash
         run: |
           sccache --version
-          {
-            echo "SCCACHE_BUCKET=maplibre-native-sccache"
-            echo "SCCACHE_REGION=eu-central-1"
-          } >> "$GITHUB_ENV"
-          if [ -z "${AWS_SECRET_ACCESS_KEY}" ]; then
-            echo "AWS_SECRET_ACCESS_KEY not set; not uploading sccache cache to S3"
-            echo "SCCACHE_S3_NO_CREDENTIALS=1" >> "$GITHUB_ENV"
-          fi
+          { echo "SCCACHE_BUCKET=maplibre-native-sccache"; echo "SCCACHE_REGION=eu-central-1"; } >> "$GITHUB_ENV"
+          if [ -z "${AWS_SECRET_ACCESS_KEY}" ]; then echo "SCCACHE_S3_NO_CREDENTIALS=1" >> "$GITHUB_ENV"; fi
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -97,7 +90,6 @@ jobs:
         uses: jurplel/install-qt-action@v4
         with:
           aqtversion: ==3.3.*
-          aqtsource: git+https://github.com/miurahr/aqtinstall.git
           version: ${{ matrix.qt_version }}
           target: desktop
           arch: ${{ matrix.qt_arch }}
@@ -117,23 +109,28 @@ jobs:
           arch: ${{ matrix.compiler }}
           vsversion: ${{ matrix.vsversion }}
 
-      # 🔥 构建：自动使用带 build_type 的目录
+      # ######################################################################
+      # 🔥 ✅ 唯一正确：只执行一次，不重复编译！自动读取 CMAKE_BUILD_TYPE！
+      # ######################################################################
       - name: Build
         shell: bash
         working-directory: source
         run: |
-          cmake --preset ${PRESET} -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
           cmake --workflow --preset ${PRESET}
 
-      # 🔥 安装：完全保持你原来的写法！只加了版本后缀
+      # ######################################################################
+      # 🔥 路径正确：自动读取带 build_type 的目录
+      # ######################################################################
       - name: Install
         shell: bash
         run: |
           mkdir -p install && cd install
-          tar xf ../build/qt6-Windows-${{ matrix.renderer }}/maplibre-native-qt_*.tar.bz2
-          mv maplibre-native-qt_* maplibre-native-qt
+          tar xf ../build/qt6-Windows-${{ matrix.renderer }}-${{ matrix.build_type }}/maplibre-native-qt_*.tar.bz2
+          mv maplibre-native-qt_* maplibre-native-qt-${{ matrix.build_type }}
 
-      # 🔥 示例：DIR 自动对应版本
+      # ######################################################################
+      # 🔥 示例路径正确，不冲突
+      # ######################################################################
       - name: Build QtQuick Example
         shell: bash
         working-directory: source/examples/quick
@@ -158,7 +155,6 @@ jobs:
       - name: Show sccache stats
         run: sccache --show-stats
 
-      # 🔥 上传：带上 build_type
       - name: Upload installation
         uses: actions/upload-artifact@v7
         with:
