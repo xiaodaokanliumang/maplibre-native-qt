@@ -122,10 +122,9 @@ jobs:
         shell: bash
         working-directory: source
         run: |
-          cmake --preset ${PRESET} \
+          cmake --workflow --preset ${PRESET} \
             -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
             -DCMAKE_CONFIGURATION_TYPES=${BUILD_TYPE}
-          cmake --build --preset ${PRESET} --config ${BUILD_TYPE}
 
       # 🔥 安装：完全保持你原来的写法！只加了版本后缀
       - name: Install
@@ -133,7 +132,7 @@ jobs:
         run: |
           mkdir -p install && cd install
           tar xf ../build/qt6-Windows-${{ matrix.renderer }}/maplibre-native-qt_*.tar.bz2
-          mv maplibre-native-qt_* maplibre-native-qt-${{ matrix.build_type }}
+          mv maplibre-native-qt_* maplibre-native-qt
 
       # 🔥 示例：DIR 自动对应版本
       - name: Build QtQuick Example
