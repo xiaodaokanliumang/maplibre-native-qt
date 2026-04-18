@@ -132,7 +132,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p install && cd install
-          tar xf ../build/qt6-Windows-${{ matrix.renderer }}-${{ matrix.build_type }}/maplibre-native-qt_*.tar.bz2
+          tar xf ../build/qt6-Windows-${{ matrix.renderer }}/maplibre-native-qt_*.tar.bz2
           mv maplibre-native-qt_* maplibre-native-qt-${{ matrix.build_type }}
 
       # 🔥 示例：DIR 自动对应版本
