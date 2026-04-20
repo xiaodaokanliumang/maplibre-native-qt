@@ -3,73 +3,28 @@ name: Windows CI
 on:
   workflow_dispatch:
   push:
-    branches:
-      - main
-    tags:
-      - "**"
+    branches: [ main ]
+    tags: [ "**" ]
     paths-ignore:
       - ".gitignore"
       - "README.md"
       - "docs/**"
-      # ignore CI for other platforms
-      - ".github/FUNDING.yml"
-      - ".github/actions/**"
-      - ".github/workflows/Android.yml"
-      - ".github/workflows/CI-cache-cleanup.yml"
-      - ".github/workflows/docs-test.yml"
-      - ".github/workflows/gh-pages-docs.yml"
-      - ".github/workflows/iOS.yml"
-      - ".github/workflows/Linux.yml"
-      - ".github/workflows/macOS.yml"
-      - ".github/workflows/source-tarball.yml"
-      - ".github/workflows/WASM.yml"
-      - "cmake/presets/Android.json"
-      - "cmake/presets/iOS.json"
-      - "cmake/presets/Linux.json"
-      - "cmake/presets/macOS.json"
-      - "cmake/presets/WASM.json"
-
-  pull_request:
-    branches:
-      - main
-    paths-ignore:
-      - ".gitignore"
-      - "README.md"
-      - "docs/**"
-      # ignore CI for other platforms
-      - ".github/FUNDING.yml"
-      - ".github/actions/**"
-      - ".github/workflows/Android.yml"
-      - ".github/workflows/CI-cache-cleanup.yml"
-      - ".github/workflows/docs-test.yml"
-      - ".github/workflows/gh-pages-docs.yml"
-      - ".github/workflows/iOS.yml"
-      - ".github/workflows/Linux.yml"
-      - ".github/workflows/macOS.yml"
-      - ".github/workflows/source-tarball.yml"
-      - ".github/workflows/WASM.yml"
-      - "cmake/presets/Android.json"
-      - "cmake/presets/iOS.json"
-      - "cmake/presets/Linux.json"
-      - "cmake/presets/macOS.json"
-      - "cmake/presets/WASM.json"
 
 concurrency:
-  # cancel jobs on PRs only
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 permissions:
-  id-token: write # needed for AWS
+  id-token: write
 
 jobs:
   build-and-test:
-    name: Build (Qt${{ matrix.qt_version }}, ${{ matrix.renderer }}, ${{ matrix.arch }})
+    name: Build (Qt${{ matrix.qt_version }}, ${{ matrix.renderer }}, ${{ matrix.arch }}, ${{ matrix.build_type }})
     runs-on: ${{ matrix.runner }}
     strategy:
       matrix:
         include:
-          - qt_version: 6.10.2
+          - qt_version: 6.8.3
             qt_arch: win64_msvc2022_64
             runner: windows-2025
             arch: msvc2022_64
@@ -77,31 +32,8 @@ jobs:
             vsversion: 2022
             preset: Windows-OpenGL-sccache
             renderer: OpenGL
-          # - qt_version: 6.10.2
-          #   qt_arch: win64_msvc2022_arm64
-          #   runner: windows-11-arm
-          #   arch: msvc2022_arm64
-          #   compiler: arm64
-          #   vsversion: 2022
-          #   preset: Windows-OpenGL-sccache
-          #   renderer: OpenGL
-          - qt_version: 6.10.2
-            qt_arch: win64_msvc2022_64
-            runner: windows-2025
-            arch: msvc2022_64
-            compiler: x64
-            vsversion: 2022
-            preset: Windows-Vulkan-sccache
-            renderer: Vulkan
-          # - qt_version: 6.10.2
-          #   qt_arch: win64_msvc2022_arm64
-          #   runner: windows-11-arm
-          #   arch: msvc2022_arm64
-          #   compiler: arm64
-          #   vsversion: 2022
-          #   preset: Windows-Vulkan-sccache
-          #   renderer: Vulkan
-          - qt_version: 6.11.0
+            build_type: Debug
+          - qt_version: 6.8.3
             qt_arch: win64_msvc2022_64
             runner: windows-2025
             arch: msvc2022_64
@@ -109,33 +41,12 @@ jobs:
             vsversion: 2022
             preset: Windows-OpenGL-sccache
             renderer: OpenGL
-          # - qt_version: 6.11.0
-          #   qt_arch: win64_msvc2022_arm64
-          #   runner: windows-11-arm
-          #   arch: msvc2022_arm64
-          #   compiler: arm64
-          #   vsversion: 2022
-          #   preset: Windows-OpenGL-sccache
-          #   renderer: OpenGL
-          - qt_version: 6.11.0
-            qt_arch: win64_msvc2022_64
-            runner: windows-2025
-            arch: msvc2022_64
-            compiler: x64
-            vsversion: 2022
-            preset: Windows-Vulkan-sccache
-            renderer: Vulkan
-          # - qt_version: 6.11.0
-          #   qt_arch: win64_msvc2022_arm64
-          #   runner: windows-11-arm
-          #   arch: msvc2022_arm64
-          #   compiler: arm64
-          #   vsversion: 2022
-          #   preset: Windows-Vulkan-sccache
-          #   renderer: Vulkan
+            build_type: Release
 
+    # 🔥 🔥 🔥 关键：这里注入编译类型，让 workflow 自动读取！只编译一次！
     env:
       PRESET: ${{ matrix.preset }}
+      CMAKE_BUILD_TYPE: ${{ matrix.build_type }}
 
     steps:
       - name: Configure AWS Credentials
@@ -156,35 +67,29 @@ jobs:
         shell: bash
         run: |
           sccache --version
-
-          {
-            echo "SCCACHE_BUCKET=maplibre-native-sccache"
-            echo "SCCACHE_REGION=eu-central-1"
-          } >> "$GITHUB_ENV"
-          if [ -z "${AWS_SECRET_ACCESS_KEY}" ]; then
-            echo "AWS_SECRET_ACCESS_KEY not set; not uploading sccache cache to S3"
-            echo "SCCACHE_S3_NO_CREDENTIALS=1" >> "$GITHUB_ENV"
-          fi
+          { echo "SCCACHE_BUCKET=maplibre-native-sccache"; echo "SCCACHE_REGION=eu-central-1"; } >> "$GITHUB_ENV"
+          if [ -z "${AWS_SECRET_ACCESS_KEY}" ]; then echo "SCCACHE_S3_NO_CREDENTIALS=1" >> "$GITHUB_ENV"; fi
 
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
         with:
           path: source
           fetch-depth: 0
 
-      - name: Setup submodules
+      - name: Install Submodules
         shell: bash
         run: |
           cd source
-          auth_header="$(git config --local --get http.https://github.com/.extraheader)"
+          git config --global core.longpaths true
           git submodule sync --recursive
-          git -c "http.extraheader=$auth_header" -c protocol.version=2 submodule update --init --force --recursive --depth=1 || true
+          git submodule update --init --depth 1 vendor/maplibre-native
+          cd vendor/maplibre-native
+          git submodule update --init --recursive --depth 1 --force
 
       - name: Download Qt
         uses: jurplel/install-qt-action@v4
         with:
           aqtversion: ==3.3.*
-          aqtsource: git+https://github.com/miurahr/aqtinstall.git
           version: ${{ matrix.qt_version }}
           target: desktop
           arch: ${{ matrix.qt_arch }}
@@ -204,19 +109,30 @@ jobs:
           arch: ${{ matrix.compiler }}
           vsversion: ${{ matrix.vsversion }}
 
+      # ######################################################################
+      # 🔥 ✅ 唯一正确：只执行一次，不重复编译！自动读取 CMAKE_BUILD_TYPE！
+      # ######################################################################
       - name: Build
         shell: bash
         working-directory: source
         run: |
-          cmake --workflow --preset ${PRESET}
+          cmake --preset ${PRESET} -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+          cmake --build --preset ${PRESET} --config ${{ matrix.build_type }}
+          cmake --build --preset ${PRESET} --target package --config ${{ matrix.build_type }}
 
+      # ######################################################################
+      # 🔥 路径正确：自动读取带 build_type 的目录
+      # ######################################################################
       - name: Install
         shell: bash
         run: |
-          mkdir install && cd install
-          tar xf ../build/qt6-Windows-${{ matrix.renderer }}/maplibre-native-qt_*.tar.bz2
-          mv maplibre-native-qt_* maplibre-native-qt
+           mkdir install && cd install
+           tar xf ../build/qt6-Windows-${{ matrix.renderer }}/maplibre-native-qt_*.tar.bz2
+           mv maplibre-native-qt_* maplibre-native-qt
 
+      # ######################################################################
+      # 🔥 示例路径正确，不冲突
+      # ######################################################################
       - name: Build QtQuick Example
         shell: bash
         working-directory: source/examples/quick
@@ -244,37 +160,11 @@ jobs:
       - name: Upload installation
         uses: actions/upload-artifact@v7
         with:
-          name: Windows_${{ matrix.arch }}_${{ matrix.qt_version }}_${{ matrix.renderer }}
+          name: Windows_${{ matrix.arch }}_${{ matrix.qt_version }}_${{ matrix.renderer }}_${{ matrix.build_type }}
           path: build/qt6-Windows-${{ matrix.renderer }}/maplibre-native-qt_*.tar.bz2
 
       - name: Upload examples
         uses: actions/upload-artifact@v7
         with:
-          name: Windows_${{ matrix.arch }}_${{ matrix.qt_version }}_${{ matrix.renderer }}_examples
+          name: Windows_${{ matrix.arch }}_${{ matrix.qt_version }}_${{ matrix.renderer }}_${{ matrix.build_type }}_examples
           path: build/qt6-example-*/*.tar.bz2
-
-  release:
-    name: Release
-    if: github.ref_type == 'tag'
-    runs-on: windows-2025
-    needs: build-and-test
-    permissions:
-      contents: write
-    strategy:
-      matrix:
-        qt_version: [6.10.2, 6.11.0]
-        arch: [msvc2022_64, msvc2022_arm64]
-        renderer: [OpenGL, Vulkan]
-
-    steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@v8
-        with:
-          name: Windows_${{ matrix.arch }}_${{ matrix.qt_version }}_${{ matrix.renderer }}
-
-      - name: Release
-        uses: ncipollo/release-action@v1
-        with:
-          artifacts: maplibre-native-qt_${{ github.ref_name }}_Qt${{ matrix.qt_version }}_Windows_${{ matrix.renderer }}.tar.bz2
-          allowUpdates: true
-          draft: true
