@@ -116,8 +116,13 @@ jobs:
         shell: bash
         working-directory: source
         run: |
-          cmake --build --preset ${PRESET} --config ${{ matrix.build_type }}
-          cmake --build --preset ${PRESET} --target package --config ${{ matrix.build_type }}
+          # 1. 配置：自己指定目录 + 编译类型（只配置，不编译）
+          cmake -B ../build/qt6-Windows-${{ matrix.renderer }}-${{ matrix.build_type }} -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -S .
+
+          # 2. 编译：只编译一次！！！
+          cmake --build ../build/qt6-Windows-${{ matrix.renderer }}-${{ matrix.build_type }} --config ${{ matrix.build_type }}
+          # 3. 打包：只打一次包！！！
+          cmake --build ../build/qt6-Windows-${{ matrix.renderer }}-${{ matrix.build_type }} --target package --config ${{ matrix.build_type }}
 
       # ######################################################################
       # 🔥 路径正确：自动读取带 build_type 的目录
@@ -125,7 +130,8 @@ jobs:
       - name: Install
         shell: bash
         run: |
-          mkdir -p install && cd install
+          mkdir -p install
+          cd install
           tar xf ../build/qt6-Windows-${{ matrix.renderer }}-${{ matrix.build_type }}/maplibre-native-qt_*.tar.bz2
           mv maplibre-native-qt_* maplibre-native-qt-${{ matrix.build_type }}
 
