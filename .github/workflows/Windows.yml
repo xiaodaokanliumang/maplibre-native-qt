@@ -116,7 +116,8 @@ jobs:
         shell: bash
         working-directory: source
         run: |
-          cmake --workflow --preset ${PRESET}
+          cmake --build --preset ${PRESET} --config ${{ matrix.build_type }}
+          cmake --build --preset ${PRESET} --target package --config ${{ matrix.build_type }}
 
       # ######################################################################
       # 🔥 路径正确：自动读取带 build_type 的目录
